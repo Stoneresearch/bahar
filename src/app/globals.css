@@ -2,26 +2,57 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@layer components {
+  .border-border {
+    @apply border border-gray-300;
+    /* Applying Tailwind utilities */
+  }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  .text-primary {
+    color: #FF69B4;
+    /* Custom primary color */
+  }
+
+  .text-secondary {
+    color: #F0E68C;
+    /* Custom secondary color */
   }
 }
 
 body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  @apply bg-gray-100 text-gray-900 font-sans;
+  /* Global body styles */
 }
 
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  @apply text-primary;
+  /* Custom primary text color for headings */
+}
+
+a {
+  @apply text-secondary hover:underline;
+  /* Custom link styles */
+}
+
+/* Anpassung der Scrollleiste */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
 }
