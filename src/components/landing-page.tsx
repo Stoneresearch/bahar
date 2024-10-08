@@ -2,10 +2,9 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence, useScroll, useTransform, useMotionValue, useAnimation, useSpring } from 'framer-motion';
-import Image from 'next/image';
+import Image from 'next/image'; // Importieren Sie die next/image-Komponente
 import { Menu, X, ZoomIn } from 'lucide-react';
 import { Store } from './Store';
-import { Carousel } from './Carousel';
 import { fetchBlogPosts } from '../lib/api';
 import { BlogPost } from '../types';
 import Link from 'next/link';
@@ -202,7 +201,6 @@ export function LandingPage() {
   const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
   const mainRef = useRef<HTMLDivElement>(null);
   const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
 
   const images = [
     '/bahar1.png',
@@ -245,29 +243,21 @@ export function LandingPage() {
   };
 
   useEffect(() => {
-    async function loadBlogPosts() {
-      setIsLoading(true);
+    const loadBlogPosts = async () => {
       try {
         const posts = await fetchBlogPosts();
-        // Transform the data if necessary
-        const transformedPosts = posts.map((post: Partial<BlogPost>) => ({
-          id: post.id ?? 0,
-          title: post.title ?? '',
-          excerpt: post.excerpt,
-          content: post.content ?? '',
-          publishedAt: post.publishedAt,
-          image: post.image ? `${process.env.NEXT_PUBLIC_API_URL}${post.image}` : undefined,
-          author: post.author ?? 'Unknown Author'
-        }));
-        setBlogPosts(transformedPosts);
+        setBlogPosts(posts);
       } catch (error) {
-        console.error("Error loading blog posts:", error);
-      } finally {
-        setIsLoading(false);
+        console.error('Failed to load blog posts:', error);
       }
-    }
+    };
+
     loadBlogPosts();
   }, []);
+
+  if (fullscreenImage) {
+    console.log("Fullscreen Image URL:", fullscreenImage);
+  }
 
   return (
     <div className="min-h-screen bg-white text-black overflow-hidden font-light cursor-none">
@@ -450,11 +440,25 @@ export function LandingPage() {
               custom={direction}
               transition={pageTransition}
             >
-              <div className="max-w-md w-full space-y-6">
-                {isLoading ? (
-                  <p>Loading blog posts...</p>
-                ) : blogPosts.length > 0 ? (
-                  <Carousel items={blogPosts} />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl w-full">
+                {blogPosts.length > 0 ? (
+                  blogPosts.map((post) => (
+                    <div key={post.id} className="p-4 border-b border-gray-200 flex flex-col">
+                      <Image
+                        src={post.image || '/fallback.png'} // Update the path to the correct fallback image
+                        alt={post.title}
+                        width={500}
+                        height={300}
+                        className="mb-2 w-full h-48 object-cover rounded-md"
+                      />
+                      <span className="text-red-500 text-xs font-bold mb-2">
+                        {post.publishedAt ? new Date(post.publishedAt).toLocaleDateString() : 'Date not available'}
+                      </span>
+                      <h2 className="text-xl font-bold mb-2">{post.title}</h2>
+                      <p className="text-gray-700 mb-4">{post.excerpt}</p>
+                      <Link href={`/blog/${post.id}`} className="text-blue-500 hover:underline">Read more</Link>
+                    </div>
+                  ))
                 ) : (
                   <p>No blog posts available.</p>
                 )}
@@ -532,15 +536,19 @@ export function LandingPage() {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.3 }}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-white bg-opacity-95 cursor-[url('/white-glove-cursor.png'),_pointer]"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-white bg-opacity-95 cursor-none"
           onClick={handleCloseFullscreenImage}
         >
-          <div className="relative max-w-2xl w-full h-auto">
+          <div className="relative max-w-2xl w-full h-auto" style={{ height: '80vh' }}>
             <Image
               src={fullscreenImage}
               alt="Fullscreen"
-              fill
-              className="object-contain"
+              layout="fill"
+              objectFit="contain"
+              onError={(e) => {
+                console.error("Error loading image:", e);
+                e.currentTarget.src = "/fallback-image.png"; // Fallback-Bild
+              }}
             />
           </div>
           <button

@@ -144,3 +144,25 @@ export async function DELETE(req: NextRequest) {
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }
+
+// Example of fetching blog posts with image URLs
+export async function fetchBlogPosts() {
+    // Fetch posts from the database
+    const posts = await prisma.blogPost.findMany({
+        select: {
+            id: true,
+            title: true,
+            content: true,
+            imageUrl: true, // Ensure this matches your database schema
+            // Remove publishedAt if it doesn't exist in your schema
+        }
+    });
+
+    return posts.map(post => ({
+        id: post.id,
+        title: post.title,
+        excerpt: post.content.substring(0, 100), // Create an excerpt from content
+        image: post.imageUrl, // Ensure image URL is included
+        // Remove publishedAt if it doesn't exist in your schema
+    }));
+}

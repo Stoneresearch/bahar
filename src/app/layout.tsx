@@ -1,34 +1,14 @@
-import type { Metadata } from "next";
-import localFont from "next/font/local";
 import { ClerkProvider } from '@clerk/nextjs';
-import "./globals.css";
+import './globals.css'; // Import your global styles
 
-const geistSans = localFont({
-  src: "./fonts/GeistVF.woff",
-  variable: "--font-geist-sans",
-  weight: "100 900",
-});
-const geistMono = localFont({
-  src: "./fonts/GeistMonoVF.woff",
-  variable: "--font-geist-mono",
-  weight: "100 900",
-});
-
-export const metadata: Metadata = {
-  title: "Bahar Şener - Visual Art & Tattoo",
-  description: "Portfolio and artworks of Bahar Şener, a multidisciplinary artist from Istanbul, Turkey.",
-};
-
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <ClerkProvider>
-      <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
-        <body>{children}</body>
-      </html>
-    </ClerkProvider>
+    <html lang="en">
+      <body>
+        <ClerkProvider publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}>
+          {children}
+        </ClerkProvider>
+      </body>
+    </html>
   );
 }

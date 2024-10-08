@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 @layer components {
-  .border-border {
+  .border-custom {
     @apply border border-gray-300;
     /* Applying Tailwind utilities */
   }
@@ -30,13 +30,18 @@ h3,
 h4,
 h5,
 h6 {
-  @apply text-primary;
+  color: #FF69B4;
   /* Custom primary text color for headings */
 }
 
 a {
-  @apply text-secondary hover:underline;
-  /* Custom link styles */
+  color: #F0E68C;
+  /* Custom link color */
+}
+
+a:hover {
+  @apply underline;
+  /* Apply underline on hover */
 }
 
 /* Anpassung der Scrollleiste */
