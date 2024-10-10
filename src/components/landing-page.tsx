@@ -1,59 +1,17 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence, useScroll, useTransform, useMotionValue, useAnimation, useSpring } from 'framer-motion';
-import Image from 'next/image'; // Importieren Sie die next/image-Komponente
+import { motion, AnimatePresence, useScroll, useTransform, useAnimation } from 'framer-motion';
+import Image from 'next/image';
 import { Menu, X, ZoomIn } from 'lucide-react';
 import { Store } from './Store';
 import { fetchBlogPosts } from '../lib/api';
 import { BlogPost } from '../types';
 import Link from 'next/link';
 
-const DynamicCursor = () => {
-  const cursorX = useMotionValue(-100);
-  const cursorY = useMotionValue(-100);
-
-  useEffect(() => {
-    const moveCursor = (e: MouseEvent) => {
-      cursorX.set(e.clientX - 12);
-      cursorY.set(e.clientY - 12);
-    };
-    const myWorkSection = document.querySelector('.my-work-section');
-    if (myWorkSection) {
-      const shadowElements = myWorkSection.querySelectorAll('.shadow-lg');
-      shadowElements.forEach((element) => {
-        element.classList.remove('shadow-lg');
-      });
-    }
-
-    window.addEventListener('mousemove', moveCursor);
-    return () => window.removeEventListener('mousemove', moveCursor);
-  }, [cursorX, cursorY]);
-
-  const springConfig = { damping: 25, stiffness: 700 };
-  const cursorXSpring = useSpring(cursorX, springConfig);
-  const cursorYSpring = useSpring(cursorY, springConfig);
-
-  return (
-    <motion.div
-      className="fixed top-0 left-0 pointer-events-none z-50"
-      style={{
-        x: cursorXSpring,
-        y: cursorYSpring,
-      }}
-    >
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M18 2L4 16L6 18L20 4L18 2Z" fill="black" />
-        <path d="M14 6L18 2L22 6L18 10L14 6Z" fill="#FF69B4" />
-        <path d="M4 16V20H8L4 16Z" fill="black" />
-      </svg>
-    </motion.div>
-  );
-};
-
 const AnimatedLink = ({ children, onClick, isActive }: { children: React.ReactNode; onClick: () => void; isActive: boolean }) => (
   <motion.span
-    className={`cursor-none text-sm uppercase tracking-wider ${isActive ? 'text-black' : 'text-gray-600'} hover:text-black transition-colors`}
+    className={`text-sm uppercase tracking-wider ${isActive ? 'text-black' : 'text-gray-600'} hover:text-black transition-colors`}
     whileHover={{ scale: 1.02 }}
     whileTap={{ scale: 0.99 }}
     transition={{ duration: 0.3 }}
@@ -260,8 +218,7 @@ export function LandingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white text-black overflow-hidden font-light cursor-none">
-      <DynamicCursor />
+    <div className="min-h-screen bg-white text-black overflow-hidden font-light">
       <FluidBackground />
 
       <header className="fixed top-0 left-0 w-full p-4 flex justify-between items-center z-20">
@@ -401,7 +358,7 @@ export function LandingPage() {
                     whileHover={{ scale: 1.03 }}
                     whileTap={{ scale: 0.98 }}
                     transition={{ duration: 0.2 }}
-                    className="flex flex-col items-center cursor-none"
+                    className="flex flex-col items-center"
                   >
                     <div
                       className="relative w-full aspect-square overflow-hidden mb-2"
@@ -536,7 +493,7 @@ export function LandingPage() {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.3 }}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-white bg-opacity-95 cursor-none"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-white bg-opacity-95"
           onClick={handleCloseFullscreenImage}
         >
           <div className="relative max-w-2xl w-full h-auto" style={{ height: '80vh' }}>
@@ -552,7 +509,7 @@ export function LandingPage() {
             />
           </div>
           <button
-            className="absolute top-4 right-4 text-black cursor-none"
+            className="absolute top-4 right-4 text-black"
             onClick={handleCloseFullscreenImage}
             aria-label="Close fullscreen"
           >

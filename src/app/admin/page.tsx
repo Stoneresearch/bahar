@@ -7,9 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Bell, LogOut, PenSquare, Search, Settings, Users, BookOpen } from "lucide-react";
+import { Bell, LogOut, PenSquare, Search, Settings, Users, BookOpen, Menu } from "lucide-react";
 import { BlogPostEditor } from '@/components/BlogPostEditor';
-import { fetchBlogPosts, deleteBlogPost, updateBlogPost } from '@/lib/api';
+import { fetchBlogPosts, deleteBlogPost, updateBlogPost, createBlogPost } from '@/lib/api';
 import { BlogPost } from '@/types';
 
 export default function AdminPage() {
@@ -20,6 +20,7 @@ export default function AdminPage() {
     const [posts, setPosts] = useState<BlogPost[]>([]);
     const [editingPost, setEditingPost] = useState<BlogPost | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     useEffect(() => {
         const checkAdminStatus = async () => {
@@ -75,12 +76,10 @@ export default function AdminPage() {
 
     const handleSubmitEdit = async (updatedPost: BlogPost) => {
         try {
-            const token = await clerk.session?.getToken();
-            if (!token) throw new Error('No authentication token available');
             if (updatedPost.id) {
-                await updateBlogPost(updatedPost, token);
+                await updateBlogPost(updatedPost);
             } else {
-                await createBlogPost(updatedPost, token);
+                await createBlogPost(updatedPost);
             }
             setEditingPost(null);
             await loadPosts();
@@ -95,17 +94,17 @@ export default function AdminPage() {
     };
 
     if (isLoading) {
-        return <div>Loading...</div>;
+        return <div className="flex items-center justify-center h-screen">Loading...</div>;
     }
 
     if (!isAdmin) {
-        return null; // This will prevent any flash of content before redirect
+        return null;
     }
 
     return (
         <div className="flex h-screen bg-gray-100">
             {/* Sidebar */}
-            <aside className="w-64 bg-white rounded-r-2xl shadow-lg transition-all duration-300 ease-in-out hover:w-72">
+            <aside className={`bg-white shadow-lg transition-all duration-300 ease-in-out ${isSidebarOpen ? 'w-64' : 'w-0 md:w-64'} overflow-hidden`}>
                 <div className="p-6">
                     <h1 className="text-2xl font-bold text-gray-800 flex items-center">
                         <BookOpen className="w-8 h-8 mr-2 text-gray-600" />
@@ -136,10 +135,15 @@ export default function AdminPage() {
             {/* Main Content */}
             <div className="flex-1 flex flex-col overflow-hidden">
                 {/* Header */}
-                <header className="flex items-center justify-between p-4 bg-white rounded-b-2xl shadow-md">
-                    <div className="flex items-center w-1/3 bg-gray-100 rounded-full overflow-hidden transition-all duration-300 ease-in-out focus-within:ring-2 focus-within:ring-gray-300">
-                        <Search className="w-5 h-5 text-gray-500 ml-3" />
-                        <Input type="search" placeholder="Search..." className="border-none bg-transparent focus:outline-none" />
+                <header className="bg-white shadow-md p-4 flex justify-between items-center">
+                    <div className="flex items-center">
+                        <Button variant="ghost" size="icon" className="md:hidden mr-2" onClick={() => setIsSidebarOpen(!isSidebarOpen)}>
+                            <Menu className="w-5 h-5" />
+                        </Button>
+                        <div className="relative">
+                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                            <Input type="search" placeholder="Search..." className="pl-10 pr-4 py-2 rounded-full bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                        </div>
                     </div>
                     <div className="flex items-center space-x-4">
                         <Button variant="ghost" size="icon" className="text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-full">
@@ -188,10 +192,10 @@ export default function AdminPage() {
                                     <div className="flex justify-between items-center">
                                         <Badge variant="secondary" className="bg-gray-100 text-gray-700 hover:bg-gray-200">{post.status || 'Draft'}</Badge>
                                         <div className="flex space-x-2">
-                                            <Button variant="outline" size="sm" className="text-gray-600 border-gray-300 hover:bg-gray-50 hover:text-gray-800 transition-colors duration-200 ease-in-out" onClick={() => handleEdit(post)}>
+                                            <Button variant="outline" size="sm" className="text-gray-600 border-gray-300 hover:bg-gray-50 hover:text-gray-800" onClick={() => handleEdit(post)}>
                                                 Edit
                                             </Button>
-                                            <Button variant="outline" size="sm" className="text-red-600 border-red-300 hover:bg-red-50 hover:text-red-800 transition-colors duration-200 ease-in-out" onClick={() => handleDelete(post.id)}>
+                                            <Button variant="outline" size="sm" className="text-red-600 border-red-300 hover:bg-red-50 hover:text-red-800" onClick={() => handleDelete(post.id)}>
                                                 Delete
                                             </Button>
                                         </div>

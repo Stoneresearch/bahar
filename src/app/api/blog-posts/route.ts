@@ -1,15 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { auth } from '@clerk/nextjs';
+import { getAuth } from '@clerk/nextjs/server';
 import { Prisma } from '@prisma/client';
 import { z } from 'zod';
 
 const blogPostSchema = z.object({
-    id: z.string().optional(), // ID für PUT-Anfragen
+    id: z.string().optional(),
     title: z.string().min(1).max(100),
     content: z.string().min(1),
-    // authorName entfernt, da es nicht im Prisma Schema existiert
-    // authorName: z.string().optional(), // authorName statt author
+    imageUrl: z.string().optional(),
+    authorName: z.string().optional(),
 });
 
 function validateBlogPostData(data: unknown) {
@@ -25,7 +25,7 @@ export async function GET() {
             }
         });
         console.log('Blog posts fetched:', blogPosts.length);
-        return NextResponse.json(blogPosts); // createdAt wird hier automatisch zurückgegeben
+        return NextResponse.json(blogPosts);
     } catch (error) {
         console.error('Error fetching blog posts:', error);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
@@ -35,8 +35,8 @@ export async function GET() {
 export async function POST(req: NextRequest) {
     console.log('POST request received for creating a blog post');
     try {
-        const { userId } = auth();
-        console.log('User ID from auth:', userId);
+        const { userId } = getAuth(req);
+        console.log('User ID:', userId);
 
         if (!userId) {
             console.log('Unauthorized access attempt');
@@ -53,13 +53,13 @@ export async function POST(req: NextRequest) {
             data: {
                 title: validatedData.title,
                 content: validatedData.content,
+                imageUrl: validatedData.imageUrl,
                 authorId: userId,
-                // authorName entfernt
-                // authorName: validatedData.authorName || 'Anonymous',
+                authorName: validatedData.authorName || 'Anonymous',
             },
         });
         console.log('New blog post created:', newBlogPost.id);
-        return NextResponse.json(newBlogPost, { status: 201 }); // createdAt wird hier automatisch zurückgegeben
+        return NextResponse.json(newBlogPost, { status: 201 });
     } catch (error) {
         if (error instanceof z.ZodError) {
             console.error('Validation error:', error.errors);
@@ -77,8 +77,8 @@ export async function POST(req: NextRequest) {
 export async function PUT(req: NextRequest) {
     console.log('PUT request received for updating a blog post');
     try {
-        const { userId } = auth();
-        console.log('User ID from auth:', userId);
+        const { userId } = getAuth(req);
+        console.log('User ID:', userId);
 
         if (!userId) {
             console.log('Unauthorized access attempt');
@@ -96,8 +96,8 @@ export async function PUT(req: NextRequest) {
             data: {
                 title: validatedData.title,
                 content: validatedData.content,
-                // authorName entfernt
-                // authorName: validatedData.authorName || 'Anonymous',
+                imageUrl: validatedData.imageUrl,
+                authorName: validatedData.authorName,
             },
         });
         console.log('Blog post updated:', updatedBlogPost.id);
@@ -116,37 +116,29 @@ export async function PUT(req: NextRequest) {
     }
 }
 
-export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(req: NextRequest) {
     console.log('DELETE request received for deleting a blog post');
     try {
-        const { userId } = auth();
-        console.log('User ID from auth:', userId);
+        const { userId } = getAuth(req);
+        console.log('User ID:', userId);
 
         if (!userId) {
             console.log('Unauthorized access attempt');
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const id = params.id;
+        const { id } = await req.json();
         console.log('Deleting blog post with ID:', id);
 
-        if (!id) {
-            console.log('No post ID provided');
-            return NextResponse.json({ error: 'Post ID is required' }, { status: 400 });
-        }
-
-        const deletedPost = await prisma.blogPost.delete({
+        await prisma.blogPost.delete({
             where: { id },
         });
-        console.log('Blog post deleted:', deletedPost);
-        return NextResponse.json({ message: 'Blog post deleted', post: deletedPost }, { status: 200 });
+        console.log('Blog post deleted:', id);
+        return NextResponse.json({ message: 'Blog post deleted' }, { status: 200 });
     } catch (error) {
         console.error('Error deleting blog post:', error);
         if (error instanceof Prisma.PrismaClientKnownRequestError) {
             console.error('Prisma error code:', error.code);
-            if (error.code === 'P2025') {
-                return NextResponse.json({ error: 'Blog post not found' }, { status: 404 });
-            }
             return NextResponse.json({ error: 'Database error', code: error.code }, { status: 500 });
         }
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
