@@ -1,10 +1,9 @@
 export interface BlogPost {
-    id: number;
+    id: string;
     title: string;
-    excerpt?: string;
     content: string;
-    publishedAt?: string;
-    image?: string;
-    imageFile?: File;
-    author: string; // New field for author
+    imageUrl: string;
+    authorName: string;
+    status?: string;
+    excerpt?: string;
 }

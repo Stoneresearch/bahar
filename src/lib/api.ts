@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { BlogPost } from '@/types'; // Import BlogPost type
 
 export async function createBlogPost(post: { title: string; content: string; authorName: string }, token: string) {
     try {
@@ -32,6 +33,7 @@ export async function updateBlogPost(post: { id: string; title: string; content:
     }
 }
 
+// Keep this deleteBlogPost function if you need token-based authorization
 export async function deleteBlogPost(postId: string, token: string) {
     try {
         console.log('Sending DELETE request to delete blog post with ID:', postId);
@@ -49,14 +51,10 @@ export async function deleteBlogPost(postId: string, token: string) {
     }
 }
 
-export async function fetchBlogPosts() {
-    try {
-        console.log('Sending GET request to fetch blog posts');
-        const response = await axios.get('/api/blog-posts');
-        console.log('GET request successful:', response.data);
-        return response.data;
-    } catch (error) {
-        console.error('Error fetching blog posts:', error);
-        throw error;
+export async function fetchBlogPosts(): Promise<BlogPost[]> {
+    const response = await fetch('/api/blog-posts');
+    if (!response.ok) {
+        throw new Error('Failed to fetch blog posts');
     }
+    return response.json();
 }
