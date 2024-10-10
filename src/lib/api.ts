@@ -1,50 +1,51 @@
-import axios from 'axios';
-import { BlogPost } from '@/types'; // Import BlogPost type
+import prisma from './prisma';
+import { BlogPost } from '@/types';
 
-export async function createBlogPost(post: { title: string; content: string; authorName: string }, token: string) {
+export async function createBlogPost(post: Omit<BlogPost, 'id'>): Promise<BlogPost> {
     try {
-        console.log('Sending POST request to create blog post:', post);
-        const response = await axios.post('/api/blog-posts', post, {
-            headers: {
-                Authorization: `Bearer ${token}`,
+        const newPost = await prisma.blogPost.create({
+            data: {
+                title: post.title,
+                content: post.content,
+                imageUrl: post.imageUrl,
+                authorName: post.authorName,
             },
         });
-        console.log('POST request successful:', response.data);
-        return response.data;
+        return newPost;
     } catch (error) {
         console.error('Error creating blog post:', error);
         throw error;
     }
 }
 
-export async function updateBlogPost(post: { id: string; title: string; content: string; authorName: string }, token: string) {
+export async function updateBlogPost(post: BlogPost): Promise<BlogPost> {
     try {
-        console.log('Sending PUT request to update blog post:', post);
-        const response = await axios.put('/api/blog-posts', post, {
-            headers: {
-                Authorization: `Bearer ${token}`,
+        const updatedPost = await prisma.blogPost.update({
+            where: { id: post.id },
+            data: {
+                title: post.title,
+                content: post.content,
+                imageUrl: post.imageUrl,
+                authorName: post.authorName,
             },
         });
-        console.log('PUT request successful:', response.data);
-        return response.data;
+        return updatedPost;
     } catch (error) {
         console.error('Error updating blog post:', error);
         throw error;
     }
 }
 
-// Keep this deleteBlogPost function if you need token-based authorization
-export async function deleteBlogPost(postId: string, token: string) {
+export async function deleteBlogPost(postId: string): Promise<void> {
     try {
-        console.log('Sending DELETE request to delete blog post with ID:', postId);
-        const response = await axios.delete('/api/blog-posts', {
-            data: { id: postId },
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
+        const response = await fetch(`/api/blog-posts/${postId}`, {
+            method: 'DELETE',
         });
-        console.log('DELETE request successful:', response.data);
-        return response.data;
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to delete blog post');
+        }
     } catch (error) {
         console.error('Error deleting blog post:', error);
         throw error;
@@ -52,9 +53,42 @@ export async function deleteBlogPost(postId: string, token: string) {
 }
 
 export async function fetchBlogPosts(): Promise<BlogPost[]> {
-    const response = await fetch('/api/blog-posts');
-    if (!response.ok) {
-        throw new Error('Failed to fetch blog posts');
+    try {
+        const posts = await prisma.blogPost.findMany({
+            orderBy: { createdAt: 'desc' },
+        });
+        return posts.map(post => ({
+            id: post.id,
+            title: post.title,
+            content: post.content,
+            imageUrl: post.imageUrl || '',
+            authorName: post.authorName || '',
+            excerpt: post.content.substring(0, 100),
+            status: post.status || 'Draft',
+        }));
+    } catch (error) {
+        console.error('Error fetching blog posts:', error);
+        throw error;
     }
-    return response.json();
+}
+
+export async function fetchBlogPostById(postId: string): Promise<BlogPost | null> {
+    try {
+        const post = await prisma.blogPost.findUnique({
+            where: { id: postId },
+        });
+        if (!post) return null;
+        return {
+            id: post.id,
+            title: post.title,
+            content: post.content,
+            imageUrl: post.imageUrl || '',
+            authorName: post.authorName || '',
+            excerpt: post.content.substring(0, 100),
+            status: post.status || 'Draft',
+        };
+    } catch (error) {
+        console.error('Error fetching blog post by ID:', error);
+        throw error;
+    }
 }

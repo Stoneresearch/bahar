@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { getAuth } from '@clerk/nextjs/server';
+import { auth } from '@clerk/nextjs';
 import { Prisma } from '@prisma/client';
 import { z } from 'zod';
 
@@ -35,8 +35,8 @@ export async function GET() {
 export async function POST(req: NextRequest) {
     console.log('POST request received for creating a blog post');
     try {
-        const { userId } = getAuth(req);
-        console.log('User ID:', userId);
+        const { userId } = auth();
+        console.log('User ID from auth:', userId);
 
         if (!userId) {
             console.log('Unauthorized access attempt');
@@ -77,8 +77,8 @@ export async function POST(req: NextRequest) {
 export async function PUT(req: NextRequest) {
     console.log('PUT request received for updating a blog post');
     try {
-        const { userId } = getAuth(req);
-        console.log('User ID:', userId);
+        const { userId } = auth();
+        console.log('User ID from auth:', userId);
 
         if (!userId) {
             console.log('Unauthorized access attempt');
@@ -116,29 +116,37 @@ export async function PUT(req: NextRequest) {
     }
 }
 
-export async function DELETE(req: NextRequest) {
+export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
     console.log('DELETE request received for deleting a blog post');
     try {
-        const { userId } = getAuth(req);
-        console.log('User ID:', userId);
+        const { userId } = auth();
+        console.log('User ID from auth:', userId);
 
         if (!userId) {
             console.log('Unauthorized access attempt');
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const { id } = await req.json();
+        const id = params.id;
         console.log('Deleting blog post with ID:', id);
 
-        await prisma.blogPost.delete({
+        if (!id) {
+            console.log('No post ID provided');
+            return NextResponse.json({ error: 'Post ID is required' }, { status: 400 });
+        }
+
+        const deletedPost = await prisma.blogPost.delete({
             where: { id },
         });
-        console.log('Blog post deleted:', id);
-        return NextResponse.json({ message: 'Blog post deleted' }, { status: 200 });
+        console.log('Blog post deleted:', deletedPost);
+        return NextResponse.json({ message: 'Blog post deleted', post: deletedPost }, { status: 200 });
     } catch (error) {
         console.error('Error deleting blog post:', error);
         if (error instanceof Prisma.PrismaClientKnownRequestError) {
             console.error('Prisma error code:', error.code);
+            if (error.code === 'P2025') {
+                return NextResponse.json({ error: 'Blog post not found' }, { status: 404 });
+            }
             return NextResponse.json({ error: 'Database error', code: error.code }, { status: 500 });
         }
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

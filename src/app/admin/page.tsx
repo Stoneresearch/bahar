@@ -53,13 +53,15 @@ export default function AdminPage() {
     };
 
     const handleDelete = async (postId: string) => {
-        try {
-            const token = await clerk.session?.getToken();
-            if (!token) throw new Error('No authentication token available');
-            await deleteBlogPost(postId, token);
-            setPosts(posts.filter(post => post.id !== postId));
-        } catch (error) {
-            console.error('Error deleting post:', error);
+        if (window.confirm('Are you sure you want to delete this post?')) {
+            try {
+                await deleteBlogPost(postId);
+                await loadPosts();
+                alert('Post deleted successfully');
+            } catch (error) {
+                console.error('Error deleting post:', error);
+                alert('Failed to delete the post. Please try again.');
+            }
         }
     };
 
@@ -75,12 +77,21 @@ export default function AdminPage() {
         try {
             const token = await clerk.session?.getToken();
             if (!token) throw new Error('No authentication token available');
-            await updateBlogPost(updatedPost, token);
+            if (updatedPost.id) {
+                await updateBlogPost(updatedPost, token);
+            } else {
+                await createBlogPost(updatedPost, token);
+            }
             setEditingPost(null);
             await loadPosts();
         } catch (error) {
-            console.error('Error updating post:', error);
+            console.error('Error updating/creating post:', error);
         }
+    };
+
+    const handleSignOut = () => {
+        clerk.signOut();
+        router.push('/');
     };
 
     if (isLoading) {
@@ -137,7 +148,12 @@ export default function AdminPage() {
                         <Avatar className="ring-2 ring-gray-200 transition-all duration-300 ease-in-out hover:ring-gray-400">
                             <AvatarFallback>{user?.firstName?.[0]}{user?.lastName?.[0]}</AvatarFallback>
                         </Avatar>
-                        <Button variant="ghost" size="icon" className="text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-full" onClick={() => router.push('/sign-out')}>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-full"
+                            onClick={handleSignOut}
+                        >
                             <LogOut className="w-5 h-5" />
                         </Button>
                     </div>
@@ -145,10 +161,15 @@ export default function AdminPage() {
 
                 {/* Main content */}
                 <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 p-6">
-                    <h2 className="text-3xl font-bold text-gray-800 mb-6 flex items-center">
-                        <PenSquare className="w-8 h-8 mr-2 text-gray-600" />
-                        Recent Posts
-                    </h2>
+                    <div className="flex justify-between items-center mb-6">
+                        <h2 className="text-3xl font-bold text-gray-800 flex items-center">
+                            <PenSquare className="w-8 h-8 mr-2 text-gray-600" />
+                            Recent Posts
+                        </h2>
+                        <Button onClick={() => setEditingPost({ id: '', title: '', content: '', imageUrl: '', authorName: `${user?.firstName} ${user?.lastName}` })}>
+                            New Post
+                        </Button>
+                    </div>
                     {editingPost ? (
                         <BlogPostEditor
                             initialData={editingPost}

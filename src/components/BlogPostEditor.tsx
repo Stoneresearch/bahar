@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { BlogPost } from '@/types'; // Import the BlogPost type
 
 interface BlogPostEditorProps {
-    onSubmit: (post: { title: string; content: string; imageUrl: string; authorName: string }) => void;
+    onSubmit: (post: BlogPost) => void; // Changed to accept BlogPost
     onCancel: () => void;
     authorName: string;
-    initialData?: { title: string; content: string; imageUrl: string; authorName: string };
+    initialData?: BlogPost; // Changed to BlogPost
 }
 
 export const BlogPostEditor: React.FC<BlogPostEditorProps> = ({ onSubmit, onCancel, authorName, initialData }) => {
