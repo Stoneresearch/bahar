@@ -11,42 +11,37 @@ interface BlogPostEditorProps {
 export const BlogPostEditor: React.FC<BlogPostEditorProps> = ({ onSubmit, onCancel, authorName, initialData }) => {
     const [title, setTitle] = useState(initialData?.title || '');
     const [content, setContent] = useState(initialData?.content || '');
-    const [selectedImage, setSelectedImage] = useState<File | null>(null);
+    const [imageUrl, setImageUrl] = useState(initialData?.imageUrl || '');
     const [authorNameState, setAuthorName] = useState(initialData?.authorName || authorName);
 
     useEffect(() => {
         if (initialData) {
             setTitle(initialData.title);
             setContent(initialData.content);
+            setImageUrl(initialData.imageUrl || '');
             setAuthorName(initialData.authorName);
         }
     }, [initialData]);
 
-    const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
-            setSelectedImage(e.target.files[0]);
+            // Here you would typically upload the file and get a URL back
+            // For now, we'll just use a fake URL
+            setImageUrl(URL.createObjectURL(e.target.files[0]));
         }
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        let imageUrl = initialData?.imageUrl || '';
-
-        if (selectedImage) {
-            // Upload image to your backend or directly to a cloud service
-            const formData = new FormData();
-            formData.append('file', selectedImage);
-
-            const response = await fetch('/api/upload', {
-                method: 'POST',
-                body: formData,
-            });
-
-            const data = await response.json();
-            imageUrl = data.url; // Assume your backend returns the URL of the uploaded image
-        }
-
-        onSubmit({ title, content, imageUrl, authorName: authorNameState });
+        const postData: BlogPost = {
+            id: initialData?.id,
+            title,
+            content,
+            imageUrl,
+            authorName: authorNameState,
+        };
+        console.log('Submitting post data:', postData);
+        onSubmit(postData);
     };
 
     return (
@@ -71,11 +66,20 @@ export const BlogPostEditor: React.FC<BlogPostEditorProps> = ({ onSubmit, onCanc
                 />
             </div>
             <div>
-                <label htmlFor="image">Image</label>
+                <label htmlFor="image">Image URL</label>
+                <input
+                    type="text"
+                    id="imageUrl"
+                    value={imageUrl}
+                    onChange={(e) => setImageUrl(e.target.value)}
+                />
+            </div>
+            <div>
+                <label htmlFor="image">Upload Image</label>
                 <input
                     type="file"
                     id="image"
-                    onChange={handleImageSelect}
+                    onChange={handleImageChange}
                 />
             </div>
             <div className="flex justify-end space-x-4 mt-4">
