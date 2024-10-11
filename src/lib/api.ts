@@ -1,48 +1,50 @@
-import axios from 'axios';
 import { BlogPost } from '@/types';
 
-export async function createBlogPost(post: Omit<BlogPost, 'id'>, token: string): Promise<BlogPost> {
-    try {
-        const response = await axios.post('/api/blog-posts', post, {
-            headers: { Authorization: `Bearer ${token}` },
-        });
-        return response.data;
-    } catch (error) {
-        console.error('Error creating blog post:', error);
-        throw error;
-    }
-}
-
-export async function updateBlogPost(post: BlogPost, token: string): Promise<BlogPost> {
-    try {
-        const response = await axios.put('/api/blog-posts', post, {
-            headers: { Authorization: `Bearer ${token}` },
-        });
-        return response.data;
-    } catch (error) {
-        console.error('Error updating blog post:', error);
-        throw error;
-    }
-}
-
-export async function deleteBlogPost(postId: string, token: string): Promise<void> {
-    try {
-        await axios.delete('/api/blog-posts', {
-            data: { id: postId },
-            headers: { Authorization: `Bearer ${token}` },
-        });
-    } catch (error) {
-        console.error('Error deleting blog post:', error);
-        throw error;
-    }
-}
-
 export async function fetchBlogPosts(): Promise<BlogPost[]> {
-    try {
-        const response = await axios.get('/api/blog-posts');
-        return response.data;
-    } catch (error) {
-        console.error('Error fetching blog posts:', error);
-        throw error;
+    const response = await fetch('/api/blog-posts');
+    if (!response.ok) {
+        throw new Error('Failed to fetch blog posts');
+    }
+    return response.json();
+}
+
+export async function createBlogPost(post: BlogPost): Promise<BlogPost> {
+    const response = await fetch('/api/blog-posts', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(post),
+    });
+    if (!response.ok) {
+        throw new Error('Failed to create blog post');
+    }
+    return response.json();
+}
+
+export async function updateBlogPost(post: BlogPost): Promise<BlogPost> {
+    const response = await fetch(`/api/blog-posts`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(post),
+    });
+    if (!response.ok) {
+        throw new Error('Failed to update blog post');
+    }
+    return response.json();
+}
+
+export async function deleteBlogPost(postId: string): Promise<void> {
+    const response = await fetch(`/api/blog-posts`, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ id: postId }),
+    });
+    if (!response.ok) {
+        throw new Error('Failed to delete blog post');
     }
 }

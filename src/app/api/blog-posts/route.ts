@@ -145,7 +145,7 @@ export async function DELETE(req: NextRequest) {
     }
 }
 
-// Example of fetching blog posts with image URLs
+// Modify the fetchBlogPosts function to include authorName and createdAt
 export async function fetchBlogPosts() {
     // Fetch posts from the database
     const posts = await prisma.blogPost.findMany({
@@ -153,8 +153,12 @@ export async function fetchBlogPosts() {
             id: true,
             title: true,
             content: true,
-            imageUrl: true, // Ensure this matches your database schema
-            // Remove publishedAt if it doesn't exist in your schema
+            imageUrl: true,
+            authorName: true,
+            createdAt: true,
+        },
+        orderBy: {
+            createdAt: 'desc'
         }
     });
 
@@ -162,7 +166,8 @@ export async function fetchBlogPosts() {
         id: post.id,
         title: post.title,
         excerpt: post.content.substring(0, 100), // Create an excerpt from content
-        image: post.imageUrl, // Ensure image URL is included
-        // Remove publishedAt if it doesn't exist in your schema
+        image: post.imageUrl,
+        authorName: post.authorName,
+        createdAt: post.createdAt,
     }));
 }

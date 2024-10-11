@@ -7,6 +7,7 @@ CREATE TABLE "BlogPost" (
     "authorId" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
+    "userId" TEXT,
 
     CONSTRAINT "BlogPost_pkey" PRIMARY KEY ("id")
 );
@@ -21,4 +22,4 @@ CREATE TABLE "User" (
 );
 
 -- AddForeignKey
-ALTER TABLE "BlogPost" ADD CONSTRAINT "BlogPost_authorId_fkey" FOREIGN KEY ("authorId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "BlogPost" ADD CONSTRAINT "BlogPost_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
